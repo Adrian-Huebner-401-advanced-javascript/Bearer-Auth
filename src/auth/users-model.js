@@ -8,7 +8,7 @@ const users = new mongoose.Schema({
   username: {type:String, required:true, unique:true},
   password: {type:String, required:true},
   email: {type: String},
-  role: {type: String, default:'user', enum: ['admin','editor','user']},
+  role: {type: String, required: true, default:'user', enum: ['admin','editor','user']},
 });
 
 users.pre('save', async function() {
@@ -42,6 +42,11 @@ users.statics.authenticateBasic = function(auth) {
   return this.findOne(query)
     .then( user => user && user.comparePassword(auth.password) )
     .catch(error => {throw error;});
+};
+
+users.statics.autheticateToken = function(token){
+  let parsedToken = jwt.verify(token, process.env.SECRET)
+  return this.findOne({_id: parsedToken.id})
 };
 
 users.methods.comparePassword = function(password) {

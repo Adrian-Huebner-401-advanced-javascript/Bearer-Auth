@@ -19,6 +19,10 @@ authRouter.post('/signup', (req, res, next) => {
     }).catch(next);
 });
 
+authRouter.get('/protected', auth, (req, res) => {
+  res.send('You have a protected password')
+});
+
 authRouter.post('/signin', auth, (req, res, next) => {
   res.cookie('auth', req.token);
   res.send(req.token);
