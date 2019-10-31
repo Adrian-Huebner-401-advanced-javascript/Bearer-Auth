@@ -3,6 +3,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const SECRET = process.env.SECRET || 'mysecret';
+const TOKEN_EXPIRES = process.env.TOKEN_LIFETIME || null;
+
+// wiping token from database anytime user uses token, optionally make a new token for them to use or have them resign back in delete or update operation
 
 const users = new mongoose.Schema({
   username: {type:String, required:true, unique:true},
@@ -44,8 +48,9 @@ users.statics.authenticateBasic = function(auth) {
     .catch(error => {throw error;});
 };
 
-users.statics.autheticateToken = function(token){
-  let parsedToken = jwt.verify(token, process.env.SECRET)
+users.statics.authenticateToken = function(token){
+  let parsedToken = jwt.verify(token, SECRET);
+  console.log(parsedToken);
   return this.findOne({_id: parsedToken.id})
 };
 
@@ -55,13 +60,14 @@ users.methods.comparePassword = function(password) {
 };
 
 users.methods.generateToken = function() {
-
+  let verifyOptions = {
+    expiresIn: 900
+  };
   let token = {
     id: this._id,
     role: this.role,
   };
-
-  return jwt.sign(token, process.env.SECRET);
+  return jwt.sign(token, SECRET, verifyOptions);
 };
 
 module.exports = mongoose.model('users', users);

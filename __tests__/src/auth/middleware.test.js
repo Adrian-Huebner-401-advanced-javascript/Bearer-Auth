@@ -1,10 +1,11 @@
 'use strict';
 
-process.env.SECRET="test";
-
+// process.env.SECRET="test";
+require('dotenv').config();
 const supergoose = require('../../supergoose.js');
 const auth = require('../../../src/auth/middleware.js');
 const Users = require('../../../src/auth/users-model.js');
+const jwt = require('jsonwebtoken');
 
 let users = {
   admin: {username: 'admin', password: 'password', role: 'admin'},
@@ -48,9 +49,7 @@ describe('Auth Middleware', () => {
         .then(() => {
           expect(next).toHaveBeenCalledWith(errorObject);
         });
-
-    }); // it()
-
+    });
     it('logs in an admin user with the right credentials', () => {
 
       let req = {
@@ -68,8 +67,41 @@ describe('Auth Middleware', () => {
           expect(next).toHaveBeenCalledWith();
         });
 
-    }); // it()
-    
+    });   
+    it('accepts a valid token', async (done) => {
+      let testUser = await new Users({password: "test", username: "test", role: 'user'}).save();
+      let token = jwt.sign({id: testUser._id, role: testUser.role}, process.env.SECRET);
+
+      let req = {
+        headers: {
+          authorization: `bearer ${token}`,
+        },
+      };
+      let res = {};
+      let next = jest.fn();
+      let middleware = auth;
+      await middleware(req, res, next);
+      expect(next).toHaveBeenCalledWith();
+      done();
+    });
+  it('fails to get a token for the user', () => {
+    let testUser = new Users({password: "test", username: "test", role: 'user'}).save();
+      let token = jwt.sign({id: testUser._id, role: testUser.role}, process.env.SECRET);
+
+      let req = {
+        headers: {
+          authorization: `bearer ${token}`,
+        },
+      };
+      let res = {};
+      let next = jest.fn();
+      let middleware = auth;
+
+      return middleware(req,res,next)
+        .then( () => {
+          expect(next).toHaveBeenCalledWith(errorObject);
+        })
+    })
   });
 
 });

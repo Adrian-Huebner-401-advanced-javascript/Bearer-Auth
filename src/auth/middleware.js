@@ -40,6 +40,7 @@ module.exports = (req, res, next) => {
   }
 
   function _authenticate(user) {
+    console.log(user);
     if(user) {
       req.user = user;
       req.token = user.generateToken();

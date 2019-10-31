@@ -1,7 +1,7 @@
 'use strict';
 
-process.env.SECRET='test';
-
+// process.env.SECRET='test';
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const server = require('../../../src/app.js').server;
